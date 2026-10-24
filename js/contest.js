@@ -61,16 +61,17 @@ function initSupabaseClient() {
 
 /**
  * Récupération des données depuis Supabase.
- * Le comptage des votes se fait en lisant toutes les lignes de la table `votes`
- * et en regroupant par entry_id côté JS.
+ * Le total global des votes de chaque photo vient d'une jointure sur la table
+ * `votes` (`votes(count)`). Cela suppose que la politique RLS SELECT de `votes`
+ * soit publique (voir SUPABASE_SETUP.md), sinon chaque utilisateur ne compte
+ * que ses propres votes.
  */
 async function fetchEntries() {
   if (isSupabaseActive && supabaseClient) {
     try {
-      // 1. Récupérer les participants
       const { data: entries, error: entriesErr } = await supabaseClient
         .from(window.SUPABASE_CONFIG.TABLE_NAME)
-        .select('id, pseudo, photo_url, created_at')
+        .select('id, pseudo, photo_url, created_at, votes(count)')
         .order('created_at', { ascending: false });
 
       if (entriesErr) {
@@ -79,26 +80,11 @@ async function fetchEntries() {
         return [];
       }
 
-      // 2. Récupérer tous les votes (entry_id uniquement)
-      const { data: allVotes, error: votesErr } = await supabaseClient
-        .from('votes')
-        .select('entry_id');
-
-      if (votesErr) {
-        console.warn('⚠️ Impossible de charger les votes:', votesErr.message);
-      }
-
-      // 3. Compter les votes par entry_id côté JS
-      const voteCountMap = {};
-      (allVotes || []).forEach(v => {
-        voteCountMap[v.entry_id] = (voteCountMap[v.entry_id] || 0) + 1;
-      });
-
       return (entries || []).map(item => ({
         id: item.id,
         pseudo: item.pseudo || 'Anonyme',
         photoUrl: item.photo_url,
-        votes: voteCountMap[item.id] || 0,
+        votes: (item.votes && item.votes[0] && item.votes[0].count) || 0,
         date: item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : 'Aujourd\'hui'
       }));
 
@@ -164,7 +150,9 @@ async function getUserVotes() {
 async function recordUserVote(id) {
   const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
   if (isSupabaseActive && supabaseClient && user) {
-    await supabaseClient.from('votes').upsert({ user_id: user.id, entry_id: id }, { onConflict: 'user_id,entry_id' });
+    const { error } = await supabaseClient.from('votes').insert({ user_id: user.id, entry_id: id });
+    // 23505 = vote déjà existant (contrainte unique) : considéré comme réussi
+    if (error && error.code !== '23505') throw error;
     return;
   }
   // Fallback localStorage
@@ -181,7 +169,8 @@ async function recordUserVote(id) {
 async function removeUserVote(id) {
   const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
   if (isSupabaseActive && supabaseClient && user) {
-    await supabaseClient.from('votes').delete().eq('user_id', user.id).eq('entry_id', id);
+    const { error } = await supabaseClient.from('votes').delete().eq('user_id', user.id).eq('entry_id', id);
+    if (error) throw error;
     return;
   }
   // Fallback localStorage
@@ -255,6 +244,24 @@ async function loadAndRenderGallery() {
 const _votingInProgress = new Set();
 
 /**
+ * Mise à jour immédiate du bouton et du compteur (+1 / -1) sans rechargement.
+ * La galerie est ensuite re-synchronisée avec les totaux réels de la base.
+ */
+function _updateVoteButtonDom(entryId, voted) {
+  const btn = document.querySelector(`.btn-vote[onclick="handleVote('${entryId}')"]`);
+  if (!btn) return;
+  btn.classList.toggle('voted', voted);
+  btn.querySelector('svg')?.setAttribute('fill', voted ? 'currentColor' : 'none');
+  const label = btn.querySelector('span:not(.vote-count)');
+  if (label) label.textContent = voted ? 'Voté !' : 'Voter';
+  const countEl = document.getElementById(`vote-count-${entryId}`);
+  if (countEl) {
+    const current = parseInt(countEl.textContent, 10) || 0;
+    countEl.textContent = Math.max(0, current + (voted ? 1 : -1));
+  }
+}
+
+/**
  * Système TOGGLE de Vote (Ajouter / Retirer un vote)
  * Nécessite d'être connecté. Ouvre la modale sinon.
  */
@@ -297,9 +304,11 @@ window.handleVote = async function(entryId) {
       const displayName = currentEntry.pseudo || 'ce participant';
       if (isCurrentlyVoted) {
         await removeUserVote(entryId);
+        _updateVoteButtonDom(entryId, false);
         if (window.showToast) window.showToast(`Vote retiré pour ${displayName}.`, 'info');
       } else {
         await recordUserVote(entryId);
+        _updateVoteButtonDom(entryId, true);
         if (window.showToast) window.showToast(`❤️ Vote enregistré pour ${displayName} ! Merci !`, 'success');
       }
 

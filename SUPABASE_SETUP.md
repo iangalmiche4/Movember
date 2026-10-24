@@ -67,14 +67,17 @@ ALTER TABLE public.votes ENABLE ROW LEVEL SECURITY;
 
 -- Reset des politiques
 DROP POLICY IF EXISTS "Lecture des votes utilisateur" ON public.votes;
+DROP POLICY IF EXISTS "Lecture publique des votes" ON public.votes;
 DROP POLICY IF EXISTS "Ajout d'un vote" ON public.votes;
 DROP POLICY IF EXISTS "Suppression d'un vote" ON public.votes;
 
--- SELECT : chaque utilisateur connecté voit ses propres votes
-CREATE POLICY "Lecture des votes utilisateur"
+-- SELECT : lecture publique des votes, nécessaire pour que le compteur global
+-- (votes(count)) soit identique pour tous les visiteurs. Le site filtre ensuite
+-- par user_id pour savoir si l'utilisateur courant a voté.
+CREATE POLICY "Lecture publique des votes"
 ON public.votes FOR SELECT
-TO authenticated
-USING (auth.uid() = user_id);
+TO public
+USING (true);
 
 -- INSERT : un utilisateur connecté peut voter (user_id doit correspondre à son uid)
 CREATE POLICY "Ajout d'un vote"
@@ -112,6 +115,18 @@ ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'movember-photos');
 ```
+
+> **Base déjà en production ?** Le script ci-dessus supprime la table `votes` (`DROP TABLE`) et donc tous les votes existants. Pour corriger uniquement le compteur global sans perdre de données, exécutez seulement :
+>
+> ```sql
+> DROP POLICY IF EXISTS "Lecture des votes utilisateur" ON public.votes;
+> DROP POLICY IF EXISTS "Lecture publique des votes" ON public.votes;
+> CREATE POLICY "Lecture publique des votes"
+> ON public.votes FOR SELECT
+> TO public
+> USING (true);
+> ```
+
 
 ---
 
