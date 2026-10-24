@@ -439,3 +439,83 @@
   font-weight: 500;
   color: var(--color-text-secondary);
 }
+
+/* ==========================================================================
+   RESPONSIVE MOBILE — composants (boutons, formulaires, auth, toasts)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Zones tactiles confortables (>= 44px) */
+  .btn,
+  .btn-sm,
+  .btn-lg {
+    min-height: 44px;
+  }
+
+  .btn-lg {
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .auth-tab {
+    min-height: 44px;
+  }
+
+  .auth-modal-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .auth-form-input {
+    min-height: 48px;
+    font-size: 1rem; /* évite le zoom automatique d'iOS au focus */
+  }
+
+  .auth-submit-btn {
+    min-height: 48px;
+  }
+
+  .auth-signout-btn {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  /* Toasts : pleine largeur, sans déborder de l'écran */
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  .toast {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-modal-overlay {
+    padding: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .auth-modal {
+    max-height: calc(100vh - 1.5rem);
+    overflow-y: auto;
+  }
+
+  .auth-modal-header {
+    padding: 1rem 1rem 0;
+  }
+
+  .auth-tabs {
+    padding: 0.75rem 1rem 0;
+  }
+
+  .auth-form {
+    padding: 1.15rem 1rem;
+  }
+
+  .upload-auth-gate {
+    padding: 1.75rem 1rem;
+  }
+}

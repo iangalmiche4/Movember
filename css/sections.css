@@ -1115,3 +1115,247 @@
     flex-direction: row;
   }
 }
+
+/* ==========================================================================
+   7. RESPONSIVE MOBILE
+   ========================================================================== */
+
+/* Garde-fou contre le défilement horizontal (body a déjà overflow-x: hidden ;
+   ne pas le poser aussi sur html, cela casserait le header sticky) */
+body {
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+/* --- Tablette & mobile (<= 992px) : le slot auth du header passe dans le tiroir --- */
+@media (max-width: 991px) {
+  #authNavSlot {
+    display: none;
+  }
+
+  .mobile-nav {
+    max-height: calc(100vh - var(--header-height));
+    overflow-y: auto;
+  }
+
+  .mobile-nav .nav-link {
+    padding-block: 0.65rem;
+  }
+
+  /* Auth dans le tiroir : boutons empilés, pleine largeur */
+  #authNavSlotMobile .btn-auth {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  #authNavSlotMobile .auth-user-chip {
+    width: 100%;
+    justify-content: space-between;
+    min-height: 48px;
+  }
+
+  #authNavSlotMobile .auth-username {
+    max-width: none;
+    flex: 1;
+  }
+
+  .mobile-nav > .btn {
+    width: 100%;
+  }
+}
+
+/* --- Mobile (<= 768px) --- */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  .section {
+    padding-block: 3rem;
+  }
+
+  .section-header {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-size: 1.65rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .contest-upload-card {
+    padding: 1.5rem 1.15rem;
+  }
+
+  .form-input,
+  .form-select {
+    min-height: 48px;
+    font-size: 1rem; /* évite le zoom automatique d'iOS au focus */
+  }
+
+  .dropzone {
+    min-height: 120px;
+  }
+
+  .contest-gallery-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .contest-gallery-title,
+  .upload-card-title {
+    font-size: 1.2rem;
+  }
+
+  /* Bouton de vote : zone tactile >= 44px */
+  .btn-vote {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .amount-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .donation-banner {
+    padding: 2rem 1.15rem;
+  }
+
+  .donation-title {
+    font-size: 1.6rem;
+  }
+
+  .donation-action-box {
+    padding: 1.5rem 1.15rem;
+  }
+
+  .amounts-selector {
+    flex-wrap: wrap;
+  }
+
+  .site-footer {
+    padding-block: 2.5rem 1.5rem;
+  }
+
+  .footer-bottom {
+    text-align: center;
+  }
+}
+
+/* --- Galerie : 1 seule colonne sous 640px --- */
+@media (max-width: 639px) {
+  .contest-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contest-img-wrapper {
+    aspect-ratio: 4/3;
+  }
+
+  .contest-img {
+    width: 100%;
+    object-fit: cover;
+  }
+}
+
+/* --- Petit mobile (<= 480px) --- */
+@media (max-width: 480px) {
+  .section {
+    padding-block: 2.5rem;
+  }
+
+  .section-title {
+    font-size: 1.45rem;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .brand {
+    font-size: 1rem;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .nav-actions {
+    gap: 0.5rem;
+  }
+
+  /* Le bouton "Je donne" reste accessible dans le tiroir */
+  .nav-actions > .btn-cta {
+    display: none;
+  }
+
+  .menu-toggle {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .contest-upload-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .contest-card-body {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+
+  .contest-participant-info {
+    flex: 1 1 100%;
+  }
+
+  .btn-vote {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .stand-card {
+    padding: 1.25rem;
+  }
+
+  .stand-header {
+    gap: 0.85rem;
+  }
+
+  .stand-footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .donation-title {
+    font-size: 1.4rem;
+  }
+
+  .fact-number {
+    font-size: 1.1rem;
+  }
+}
