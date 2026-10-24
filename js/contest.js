@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initSupabaseClient();
   await loadAndRenderGallery();
+  initCardLightbox();
   initUploadForm();
   initUploadFormAuthGate();
   _updateUploadCardTitle();
@@ -181,6 +182,24 @@ async function removeUserVote(id) {
   } catch (e) {}
 }
 
+// Animation d'apparition (AOS) : appliquée uniquement au chargement initial de la
+// galerie, pas à chaque re-rendu (vote), pour éviter que les cartes clignotent.
+let _galleryFirstRenderAt = 0;
+// Id de la participation qui vient de recevoir un vote (pour l'animation du cœur)
+let _pulseEntryId = null;
+
+/**
+ * Rebond du cœur de vote (Animate.css)
+ */
+function _pulseHeart(el) {
+  if (!el) return;
+  const cls = ['animate__animated', 'animate__bounceIn'];
+  el.classList.remove(...cls);
+  void el.getBoundingClientRect(); // force le recalcul pour relancer l'animation
+  el.classList.add(...cls);
+  el.addEventListener('animationend', () => el.classList.remove(...cls), { once: true });
+}
+
 /**
  * Affichage / Rendu dynamique de la galerie
  */
@@ -209,35 +228,140 @@ async function loadAndRenderGallery() {
   // Tri par votes décroissants
   const sorted = [...entries].sort((a, b) => b.votes - a.votes);
 
+  // AOS n'est ajouté que si la bibliothèque est chargée (sinon les cartes resteraient invisibles)
+  // et seulement pendant la phase de chargement initial.
+  if (!_galleryFirstRenderAt) _galleryFirstRenderAt = Date.now();
+  const useAos = !!window.AOS && (Date.now() - _galleryFirstRenderAt < 2500);
+  const pulseId = _pulseEntryId;
+  _pulseEntryId = null;
+
   gallery.innerHTML = sorted.map((entry, index) => {
     const hasVoted = userVotes.includes(entry.id);
     const isLeader = index === 0 && entry.votes > 0;
+    const initial = escapeHtml((Array.from((entry.pseudo || '?').trim())[0] || '?').toUpperCase());
+    const heartAnim = entry.id === pulseId ? ' animate__animated animate__bounceIn' : '';
 
     return `
-      <div class="contest-card ${isLeader ? 'leader-card' : ''}" data-id="${entry.id}">
-        ${isLeader ? '<div class="leader-badge">★ En tête du vote</div>' : ''}
-        <div class="contest-img-wrapper">
-          <img src="${escapeHtml(entry.photoUrl)}" alt="Moustache de ${escapeHtml(entry.pseudo)}" loading="lazy" class="contest-img" onerror="this.src='https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80'" />
-        </div>
-        <div class="contest-card-body">
+      <article class="contest-card ${isLeader ? 'leader-card' : ''}" data-id="${entry.id}" tabindex="0" aria-label="Agrandir la photo de ${escapeHtml(entry.pseudo)}"${useAos ? ' data-aos="fade-up"' : ''}>
+        <header class="contest-card-header">
+          <span class="contest-avatar" aria-hidden="true">${initial}</span>
           <div class="contest-participant-info">
             <h4 class="contest-participant-name">${escapeHtml(entry.pseudo)}</h4>
             <span class="contest-participant-tag">Candidat officiel</span>
           </div>
-          
+        </header>
+        <div class="contest-img-wrapper">
+          ${isLeader ? '<div class="leader-badge">★ En tête du vote</div>' : ''}
+          <img src="${escapeHtml(entry.photoUrl)}" alt="Moustache de ${escapeHtml(entry.pseudo)}" loading="lazy" class="contest-img" onerror="this.src='https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80'" />
+        </div>
+        <footer class="contest-card-footer">
           <div class="contest-card-actions">
             <button class="btn-vote ${hasVoted ? 'voted' : ''}" onclick="handleVote('${entry.id}')" aria-label="${hasVoted ? 'Retirer mon vote pour ' : 'Voter pour '}${escapeHtml(entry.pseudo)}" title="${hasVoted ? 'Cliquez pour retirer votre vote' : (typeof getCurrentUser === 'function' && getCurrentUser() ? 'Cliquez pour voter' : 'Connectez-vous pour voter')}">
-              <svg viewBox="0 0 24 24" fill="${hasVoted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+              <svg class="heart-icon${heartAnim}" viewBox="0 0 24 24" fill="${hasVoted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
               <span>${hasVoted ? 'Voté !' : 'Voter'}</span>
               <span class="vote-count" id="vote-count-${entry.id}">${entry.votes}</span>
             </button>
           </div>
-        </div>
-      </div>
+        </footer>
+      </article>
     `;
   }).join('');
+
+  // Les cartes sont créées dynamiquement : AOS doit réanalyser le DOM
+  if (window.AOS) window.AOS.refreshHard();
+}
+
+/**
+ * Agrandissement d'une carte au clic.
+ * Un clic n'importe où (ou la touche Échap) ferme la vue agrandie et ramène à la galerie.
+ * Délégation d'événement sur la galerie : fonctionne malgré les re-rendus (votes).
+ */
+function initCardLightbox() {
+  const gallery = document.getElementById('contestGallery');
+  if (!gallery || gallery.dataset.lightboxBound) return;
+  gallery.dataset.lightboxBound = '1';
+
+  let overlay = null;
+
+  function closeLightbox() {
+    if (!overlay) return;
+    overlay.remove();
+    overlay = null;
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onKeydown);
+  }
+
+  // Échap uniquement : Entrée/Espace ouvrent la vue, les réutiliser pour fermer
+  // la refermerait immédiatement (même événement clavier).
+  function onKeydown(e) {
+    if (e.key === 'Escape') closeLightbox();
+  }
+
+  function openLightbox(card) {
+    const img = card.querySelector('.contest-img');
+    if (!img) return;
+
+    const pseudo = card.querySelector('.contest-participant-name')?.textContent || '';
+    const votes = card.querySelector('.vote-count')?.textContent || '0';
+    const hasVoted = !!card.querySelector('.btn-vote.voted');
+
+    overlay = document.createElement('div');
+    overlay.className = 'card-lightbox animate__animated animate__fadeIn animate__faster';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', `Photo de ${pseudo}`);
+
+    const box = document.createElement('div');
+    box.className = 'card-lightbox-box animate__animated animate__zoomIn animate__faster';
+
+    const photo = document.createElement('img');
+    photo.className = 'card-lightbox-img';
+    photo.src = img.currentSrc || img.src;
+    photo.alt = img.alt;
+
+    const info = document.createElement('div');
+    info.className = 'card-lightbox-info';
+
+    const name = document.createElement('span');
+    name.className = 'card-lightbox-name';
+    name.textContent = pseudo;
+
+    const count = document.createElement('span');
+    count.className = 'card-lightbox-votes' + (hasVoted ? ' voted' : '');
+    count.textContent = `${hasVoted ? '❤️' : '♡'} ${votes} vote${Number(votes) > 1 ? 's' : ''}`;
+
+    const hint = document.createElement('span');
+    hint.className = 'card-lightbox-hint';
+    hint.textContent = 'Touchez n\'importe où pour revenir à la galerie';
+
+    info.append(name, count);
+    box.append(photo, info, hint);
+    overlay.append(box);
+
+    // Un clic n'importe où, y compris sur la photo, ferme la vue
+    overlay.addEventListener('click', closeLightbox);
+
+    document.body.append(overlay);
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeydown);
+  }
+
+  gallery.addEventListener('click', (e) => {
+    // Le bouton de vote garde son propre comportement
+    if (e.target.closest('.btn-vote')) return;
+    const card = e.target.closest('.contest-card');
+    if (card) openLightbox(card);
+  });
+
+  // Accessibilité clavier : Entrée / Espace sur une carte focalisée
+  gallery.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList?.contains('contest-card')) {
+      e.preventDefault();
+      openLightbox(e.target);
+    }
+  });
 }
 
 // Garde pour éviter les doubles clics pendant qu'une requête de vote est en cours
@@ -251,7 +375,12 @@ function _updateVoteButtonDom(entryId, voted) {
   const btn = document.querySelector(`.btn-vote[onclick="handleVote('${entryId}')"]`);
   if (!btn) return;
   btn.classList.toggle('voted', voted);
-  btn.querySelector('svg')?.setAttribute('fill', voted ? 'currentColor' : 'none');
+  const heart = btn.querySelector('svg');
+  heart?.setAttribute('fill', voted ? 'currentColor' : 'none');
+  if (voted) {
+    _pulseHeart(heart);
+    _pulseEntryId = entryId; // rejoue le rebond après le re-rendu de la galerie
+  }
   const label = btn.querySelector('span:not(.vote-count)');
   if (label) label.textContent = voted ? 'Voté !' : 'Voter';
   const countEl = document.getElementById(`vote-count-${entryId}`);

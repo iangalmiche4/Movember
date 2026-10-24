@@ -6,29 +6,17 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Animations au scroll (AOS, chargé via CDN) — ignoré si le CDN est indisponible
+  if (window.AOS) {
+    window.AOS.init({ duration: 600, once: true });
+  }
   initMobileNavigation();
   initScrollSpy();
-  initDonationAmountSelector();
   // Authentification Supabase (toutes les pages)
   if (typeof initAuth === 'function') {
     initAuth();
   }
 });
-
-/**
- * Sélecteur interactif des montants de don
- */
-function initDonationAmountSelector() {
-  const amountButtons = document.querySelectorAll('.amount-btn');
-  if (!amountButtons.length) return;
-
-  amountButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      amountButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-}
 
 /**
  * Gestion du menu burger mobile

@@ -128,6 +128,15 @@ function openAuthModal(tabOverride) {
   const modal = document.getElementById('authModal');
   if (!modal) return;
   modal.classList.add('is-open');
+  // Micro-interaction à l'ouverture (Animate.css, ignoré s'il n'est pas chargé)
+  const dialog = modal.querySelector('.auth-modal');
+  if (dialog) {
+    const cls = ['animate__animated', 'animate__fadeInUp', 'animate__faster'];
+    dialog.classList.remove(...cls);
+    void dialog.offsetWidth; // relance l'animation à chaque ouverture
+    dialog.classList.add(...cls);
+    dialog.addEventListener('animationend', () => dialog.classList.remove(...cls), { once: true });
+  }
   document.body.style.overflow = 'hidden';
   if (tabOverride === 'signup') {
     _switchTab('signup');

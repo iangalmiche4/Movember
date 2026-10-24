@@ -547,17 +547,19 @@
 /* ==========================================================================
    4. CONCOURS SECTION (RUBRIQUE 2)
    ========================================================================== */
+/* Une seule colonne sur tous les écrans : formulaire d'upload en haut,
+   galerie des participants toujours en dessous. */
 .contest-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2.5rem;
 }
 
-@media (min-width: 992px) {
-  .contest-layout {
-    grid-template-columns: 1fr 1.35fr;
-    gap: 3rem;
-  }
+/* Sur grand écran, le formulaire reste compact et centré au-dessus de la galerie */
+.contest-upload-card {
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
 }
 
 /* Formulaire de dépôt */
@@ -739,16 +741,23 @@
   gap: 1.25rem;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 768px) {
   .contest-gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 992px) {
+  .contest-gallery-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 .contest-card {
   background: var(--color-bg-card);
   border: var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -780,23 +789,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Cadre photo de taille fixe : toutes les cartes ont exactement les mêmes dimensions */
 .contest-img-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 4/3;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: #0e141b;
 }
 
+/* contain = photo entière, sans recadrage ni zoom ; bandes sombres si le format diffère */
 .contest-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform var(--transition-slow);
-}
-
-.contest-card:hover .contest-img {
-  transform: scale(1.04);
+  object-fit: contain;
 }
 
 .contest-category-tag {
@@ -813,17 +819,43 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.contest-card-body {
-  padding: 1.15rem;
+/* En-tête de carte : avatar + pseudo */
+.contest-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
+  padding: 0.85rem 1rem;
   background: var(--color-bg-card);
+}
+
+.contest-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-gradient);
+  color: #0b0f14;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+/* Pied de carte : bouton de vote + compteur */
+.contest-card-footer {
+  padding: 0.85rem 1rem 1rem;
+  background: var(--color-bg-card);
+  border-top: var(--border-subtle);
+}
+
+.contest-card-actions {
+  display: flex;
 }
 
 .contest-participant-info {
   overflow: hidden;
+  min-width: 0;
 }
 
 .contest-participant-name {
@@ -847,6 +879,7 @@
 .btn-vote {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   padding: 0.45rem 0.85rem;
   border-radius: var(--radius-full);
@@ -861,8 +894,12 @@
 }
 
 .btn-vote svg {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-vote:active {
+  transform: scale(0.96);
 }
 
 .btn-vote:hover {
@@ -1007,30 +1044,6 @@
   font-weight: 700;
   color: var(--color-text-secondary);
   margin-bottom: 1.25rem;
-}
-
-.amounts-selector {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.amount-btn {
-  padding: 0.6rem 0.9rem;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--color-text-primary);
-  font-weight: 700;
-  font-size: 0.9rem;
-  transition: all var(--transition-fast);
-}
-
-.amount-btn:hover, .amount-btn.active {
-  background: var(--color-accent-orange);
-  color: #0b0f14;
-  border-color: var(--color-accent-orange);
 }
 
 .tax-deduction-note {
@@ -1229,11 +1242,6 @@ body {
     font-size: 0.875rem;
   }
 
-  .amount-btn {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
   .donation-banner {
     padding: 2rem 1.15rem;
   }
@@ -1246,10 +1254,6 @@ body {
     padding: 1.5rem 1.15rem;
   }
 
-  .amounts-selector {
-    flex-wrap: wrap;
-  }
-
   .site-footer {
     padding-block: 2.5rem 1.5rem;
   }
@@ -1259,19 +1263,60 @@ body {
   }
 }
 
-/* --- Galerie : 1 seule colonne sous 640px --- */
-@media (max-width: 639px) {
+/* --- Galerie : 2 colonnes compactes sous 768px, image entière (sans recadrage) --- */
+@media (max-width: 767px) {
   .contest-gallery-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    align-items: start;
   }
 
-  .contest-img-wrapper {
-    aspect-ratio: 4/3;
+  /* En-tête compact : avatar réduit, pseudo seul */
+  .contest-gallery-grid .contest-card-header {
+    padding: 0.5rem 0.6rem;
+    gap: 0.5rem;
   }
 
-  .contest-img {
+  .contest-gallery-grid .contest-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .contest-gallery-grid .contest-participant-name {
+    font-size: 0.85rem;
+  }
+
+  .contest-gallery-grid .contest-participant-tag {
+    display: none;
+  }
+
+  /* Pied compact : bouton de vote ajusté à la demi-largeur (zone tactile >= 44px) */
+  .contest-gallery-grid .contest-card-footer {
+    padding: 0.5rem;
+  }
+
+  .contest-gallery-grid .contest-card-footer .btn-vote {
+    min-height: 44px;
+    padding: 0.4rem 0.5rem;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+  }
+
+  .contest-gallery-grid .btn-vote svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .contest-gallery-grid .leader-badge {
+    top: 6px;
+    left: 6px;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .contest-card-footer .btn-vote {
     width: 100%;
-    object-fit: cover;
   }
 }
 
@@ -1324,18 +1369,12 @@ body {
     padding: 1.25rem 1rem;
   }
 
-  .contest-card-body {
-    flex-wrap: wrap;
-    padding: 1rem;
+  .contest-card-header {
+    padding: 0.75rem 0.85rem;
   }
 
-  .contest-participant-info {
-    flex: 1 1 100%;
-  }
-
-  .btn-vote {
-    flex: 1 1 100%;
-    justify-content: center;
+  .contest-card-footer {
+    padding: 0.75rem 0.85rem 0.85rem;
   }
 
   .stand-card {
@@ -1357,5 +1396,215 @@ body {
 
   .fact-number {
     font-size: 1.1rem;
+  }
+}
+
+/* ==========================================================================
+   8. UI MOBILE-FIRST "APP" — header flouté, zones tactiles 48px, animations
+   ========================================================================== */
+
+/* Header & tiroir de navigation : effet verre dépoli façon iOS */
+.site-header,
+.mobile-nav {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 768px) {
+  /* Header compact : padding latéral réduit */
+  .site-header .container {
+    padding-inline: 1rem;
+  }
+
+  /* Boutons d'action principaux : 48px minimum pour le pouce */
+  .btn:not(.btn-sm),
+  .btn-primary,
+  .btn-cta,
+  .btn-auth,
+  .auth-submit-btn,
+  .login-submit-btn,
+  .btn-vote {
+    min-height: 48px;
+  }
+}
+
+/* Cœur de vote : rebond (Animate.css) plus rapide et sans décalage de la mise en page */
+.btn-vote .heart-icon {
+  transform-origin: center;
+  --animate-duration: 0.6s;
+}
+
+/* Respecte le réglage "réduire les animations" du système */
+@media (prefers-reduced-motion: reduce) {
+  [data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .animate__animated {
+    animation: none !important;
+  }
+}
+/* ==========================================================================
+   9. CARTES DE LA GALERIE — animation de couleur au survol + vue agrandie
+   ========================================================================== */
+
+.contest-card {
+  cursor: pointer;
+}
+
+.contest-card:focus-visible {
+  outline: 2px solid var(--color-accent-cyan);
+  outline-offset: 2px;
+}
+
+/* Survol : la bordure et la lueur passent en douceur du cyan à l'orange */
+@keyframes cardColorShift {
+  0%, 100% {
+    border-color: rgba(0, 188, 212, 0.65);
+    box-shadow: 0 6px 24px rgba(0, 188, 212, 0.28);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.7);
+    box-shadow: 0 6px 24px rgba(245, 158, 11, 0.28);
+  }
+}
+
+.contest-card:hover {
+  animation: cardColorShift 2.4s ease-in-out infinite;
+}
+
+.contest-card:hover .contest-card-header,
+.contest-card:hover .contest-card-footer {
+  background: var(--color-bg-card-hover);
+}
+
+.contest-card-header,
+.contest-card-footer {
+  transition: background var(--transition-normal);
+}
+
+/* Vue agrandie d'une carte */
+.card-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5, 8, 12, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.card-lightbox-box {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: 100%;
+  background: var(--color-bg-card);
+  border: 1px solid rgba(0, 188, 212, 0.45);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), var(--shadow-glow-cyan);
+  overflow: hidden;
+}
+
+/* Photo entière, sans recadrage ni zoom, dans la limite de l'écran */
+.card-lightbox-img {
+  width: 100%;
+  height: auto;
+  max-height: 72vh;
+  object-fit: contain;
+  background: #0e141b;
+}
+
+.card-lightbox-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem 0.35rem;
+}
+
+.card-lightbox-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-lightbox-votes {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-accent-cyan);
+}
+
+.card-lightbox-hint {
+  padding: 0 1.1rem 0.9rem;
+  font-size: 0.775rem;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contest-card:hover {
+    animation: none;
+  }
+}
+/* ==========================================================================
+   10. GALERIE SUR ORDINATEUR — cartes compactes, 4 photos par ligne (>= 992px)
+   ========================================================================== */
+@media (min-width: 768px) {
+  .contest-gallery-grid {
+    gap: 1rem;
+    align-items: start;
+  }
+
+  /* En-tête et pied compacts */
+  .contest-gallery-grid .contest-card-header {
+    padding: 0.6rem 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .contest-gallery-grid .contest-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .contest-gallery-grid .contest-participant-name {
+    font-size: 0.9rem;
+  }
+
+  .contest-gallery-grid .contest-participant-tag {
+    font-size: 0.7rem;
+  }
+
+  .contest-gallery-grid .contest-card-footer {
+    padding: 0.6rem 0.75rem 0.75rem;
+  }
+
+  .contest-gallery-grid .contest-card-footer .btn-vote {
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .contest-gallery-grid .btn-vote svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .contest-gallery-grid .leader-badge {
+    top: 8px;
+    left: 8px;
+    font-size: 0.62rem;
+    padding: 0.2rem 0.5rem;
   }
 }
