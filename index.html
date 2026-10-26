@@ -120,15 +120,15 @@
 
           <div class="hero-key-facts">
             <div class="fact-item">
-              <span class="fact-number">4</span>
+              <span class="fact-number" data-count="4">0</span>
               <span class="fact-label">Stands & animations</span>
             </div>
             <div class="fact-item">
-              <span class="fact-number">100%</span>
+              <span class="fact-number" data-count="100" data-suffix="%">0%</span>
               <span class="fact-label">Solidaire & ouvert à tous</span>
             </div>
             <div class="fact-item">
-              <span class="fact-number">1</span>
+              <span class="fact-number" data-count="1">0</span>
               <span class="fact-label">Grand concours photo</span>
             </div>
           </div>
@@ -226,6 +226,69 @@
             </a>
           </div>
 
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         AFFICHE DE L'ÉVÉNEMENT
+         ======================================================================== -->
+    <section class="section affiche-section" style="padding-top: 0; padding-bottom: 5rem;">
+      <div class="container">
+
+        <div class="section-header" data-aos="fade-up">
+          <div class="section-tag">
+            <span>Affiche Officielle</span>
+          </div>
+          <h2 class="section-title">L'affiche de l'événement</h2>
+          <p class="section-subtitle">
+            Retrouvez tous les détails de la journée Movember à Saint Loup des Chaumes sur l'affiche officielle.
+          </p>
+        </div>
+
+        <div class="affiche-wrapper" data-aos="fade-up" data-aos-delay="100">
+          <!-- Trait décoratif top déjà géré par ::before -->
+          <div class="affiche-card">
+            <div class="affiche-embed-area">
+              <object
+                data="assets/Movember_StLoupDesChaumes.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit&zoom=page-fit"
+                type="application/pdf"
+                class="affiche-iframe"
+                aria-label="Affiche officielle Movember — Saint Loup des Chaumes"
+              >
+                <!-- Fallback si le navigateur ne supporte pas l'embed PDF -->
+                <div class="affiche-fallback">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" style="color: var(--color-accent-cyan); margin-bottom: 1rem;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/>
+                  </svg>
+                  <p>Votre navigateur ne peut pas afficher ce PDF.</p>
+                  <a href="assets/Movember_StLoupDesChaumes.pdf" target="_blank" class="btn btn-outline-cyan btn-sm" style="margin-top: 0.75rem;">Ouvrir l'affiche</a>
+                </div>
+              </object>
+            </div>
+            <div class="affiche-card-footer">
+              <span class="affiche-label">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM8 13h8v1H8zm0 2h8v1H8zm0 2h5v1H8z"/>
+                </svg>
+                Affiche — Movember Saint Loup des Chaumes 2024
+              </span>
+              <a
+                href="assets/Movember_StLoupDesChaumes.pdf"
+                download
+                class="btn btn-outline-cyan btn-sm"
+                aria-label="Télécharger l'affiche en PDF"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Télécharger</span>
+              </a>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -345,5 +408,49 @@
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    (function () {
+      // Anime un compteur de 0 jusqu'à `target` en `duration` ms avec easing ease-out
+      function animateCounter(el) {
+        const target   = parseInt(el.dataset.count, 10);
+        const suffix   = el.dataset.suffix || '';
+        const duration = 1400; // ms
+        const start    = performance.now();
+
+        function step(now) {
+          const elapsed  = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          // ease-out cubique
+          const eased    = 1 - Math.pow(1 - progress, 3);
+          const current  = Math.round(eased * target);
+          el.textContent = current + suffix;
+          if (progress < 1) requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      // Lance l'animation dès que les compteurs entrent dans le viewport
+      const counters = document.querySelectorAll('.fact-number[data-count]');
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              animateCounter(entry.target);
+              observer.unobserve(entry.target); // une seule fois
+            }
+          });
+        }, { threshold: 0.6 });
+
+        counters.forEach(function (el) { observer.observe(el); });
+      } else {
+        // Fallback : navigateurs sans IntersectionObserver — affiche directement la valeur finale
+        counters.forEach(function (el) {
+          el.textContent = el.dataset.count + (el.dataset.suffix || '');
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
