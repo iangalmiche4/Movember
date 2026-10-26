@@ -200,8 +200,11 @@ async function handleSignIn(e) {
   const password = document.getElementById('authPasswordInput')?.value;
   if (!email || !password) return _showAuthError('signinForm', 'Veuillez remplir tous les champs.');
 
+  // Applique le même padding que lors de l'inscription
+  const paddedPassword = password.length < 6 ? password.padEnd(6, '_x') : password;
+
   _setAuthLoading('signinForm', true);
-  const { error } = await window._supabaseClient.auth.signInWithPassword({ email, password });
+  const { error } = await window._supabaseClient.auth.signInWithPassword({ email, password: paddedPassword });
   _setAuthLoading('signinForm', false);
 
   if (error) {
@@ -225,12 +228,16 @@ async function handleSignUp(e) {
   const pseudo = document.getElementById('signupPseudoInput')?.value.trim();
 
   if (!email || !password || !pseudo) return _showAuthError('signupForm', 'Veuillez remplir tous les champs.');
-  if (password.length < 6) return _showAuthError('signupForm', 'Le mot de passe doit faire au moins 6 caractères.');
+  if (password.length < 4) return _showAuthError('signupForm', 'Le mot de passe doit faire au moins 4 caractères.');
+
+  // Supabase impose min. 6 caractères côté serveur (non modifiable sans accès dashboard).
+  // On padde silencieusement jusqu'à 6 avec un suffixe fixe invisible pour l'utilisateur.
+  const paddedPassword = password.length < 6 ? password.padEnd(6, '_x') : password;
 
   _setAuthLoading('signupForm', true);
   const { error } = await window._supabaseClient.auth.signUp({
     email,
-    password,
+    password: paddedPassword,
     options: { data: { pseudo } }
   });
   _setAuthLoading('signupForm', false);
@@ -248,8 +255,8 @@ async function handleSignUp(e) {
 
 async function handleSignOut() {
   await window._supabaseClient.auth.signOut();
-  // Après déconnexion, toujours revenir sur login.html
-  window.location.replace('login.html');
+  // Reste sur la page courante — l'UI se met à jour via onAuthStateChange
+  // (pas de redirection : le site est désormais entièrement public)
 }
 
 function _bindAuthModal() {
@@ -338,8 +345,9 @@ function _bindLoginPage() {
       return;
     }
 
+    const paddedPassword = password.length < 6 ? password.padEnd(6, '_x') : password;
     setLoginLoading('signinSubmit', true, signinBtnHtml);
-    const { error } = await window._supabaseClient.auth.signInWithPassword({ email, password });
+    const { error } = await window._supabaseClient.auth.signInWithPassword({ email, password: paddedPassword });
     setLoginLoading('signinSubmit', false, signinBtnHtml);
     if (error) {
       const msg = error.message.includes('Invalid login') ? 'Email ou mot de passe incorrect.' : error.message;
@@ -354,16 +362,17 @@ function _bindLoginPage() {
     const email = document.getElementById('signupEmailInput')?.value.trim();
     const password = document.getElementById('signupPasswordInput')?.value;
     if (!pseudo || !email || !password) return showLoginError('signupForm', 'Veuillez remplir tous les champs.');
-    if (password.length < 6) return showLoginError('signupForm', 'Le mot de passe doit faire au moins 6 caractères.');
+    if (password.length < 4) return showLoginError('signupForm', 'Le mot de passe doit faire au moins 4 caractères.');
 
     if (!window._supabaseClient) {
       window.location.replace('index.html');
       return;
     }
 
+    const paddedPassword = password.length < 6 ? password.padEnd(6, '_x') : password;
     setLoginLoading('signupSubmit', true, signupBtnHtml);
     const { error } = await window._supabaseClient.auth.signUp({
-      email, password, options: { data: { pseudo } }
+      email, password: paddedPassword, options: { data: { pseudo } }
     });
     setLoginLoading('signupSubmit', false, signupBtnHtml);
     if (error) return showLoginError('signupForm', error.message);

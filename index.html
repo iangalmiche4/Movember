@@ -137,12 +137,11 @@
         <!-- Visuel / Blason Saint Loup -->
         <div class="hero-visual">
           <div class="flyer-preview-card">
-            <div class="flyer-visual" style="padding: 1.5rem;">
-              <span class="flyer-ribbon">Saint Loup des Chaumes</span>
+            <div class="flyer-visual blason-visual">
               <img
                 src="assets/blason.jpg"
                 alt="Blason de Saint Loup des Chaumes"
-                style="width: 100%; max-width: 320px; border-radius: var(--radius-md); object-fit: contain; margin: 0.5rem auto;"
+                class="blason-img"
               >
             </div>
             <p class="flyer-caption">Saint Loup des Chaumes — Movember 2024</p>
@@ -329,8 +328,8 @@
           <input class="auth-form-input" type="email" id="signupEmailInput" placeholder="vous@email.com" autocomplete="email" required>
         </div>
         <div>
-          <label class="auth-form-label" for="signupPasswordInput">Mot de passe (min. 6 caractères)</label>
-          <input class="auth-form-input" type="password" id="signupPasswordInput" placeholder="••••••••" autocomplete="new-password" required>
+          <label class="auth-form-label" for="signupPasswordInput">Mot de passe (min. 4 caractères)</label>
+          <input class="auth-form-input" type="password" id="signupPasswordInput" placeholder="••••" autocomplete="new-password" required minlength="4">
         </div>
         <div class="auth-error" role="alert"></div>
         <button type="submit" class="auth-submit-btn">

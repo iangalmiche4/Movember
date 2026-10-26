@@ -422,22 +422,43 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  padding: 2.5rem 1.5rem;
-  background: var(--color-bg-card);
-  border: var(--border-subtle);
+  gap: 0.85rem;
+  padding: 2.5rem 1.75rem;
+  background: linear-gradient(160deg, #1a2230 0%, #0f161f 100%);
+  border: 1px solid rgba(0, 188, 212, 0.2);
   border-radius: var(--radius-md);
   text-align: center;
   color: var(--color-text-muted);
 }
 .upload-auth-gate svg {
   color: var(--color-accent-cyan);
-  opacity: 0.7;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
 }
-.upload-auth-gate p {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
+.upload-auth-gate .gate-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.upload-auth-gate .gate-hint {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 340px;
+}
+.upload-auth-gate .gate-hint strong {
+  color: var(--color-accent-cyan);
+}
+.upload-auth-gate .gate-hint code {
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: rgba(0, 188, 212, 0.1);
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  color: var(--color-accent-cyan);
 }
 
 /* ==========================================================================
