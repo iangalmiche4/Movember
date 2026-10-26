@@ -749,12 +749,19 @@ function initUploadFormAuthGate() {
         gateEl.id = 'uploadAuthGate';
         gateEl.className = 'upload-auth-gate';
         gateEl.innerHTML = `
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          <p>Connectez-vous pour participer au concours</p>
-          <button class="btn btn-primary btn-sm" id="gateLoginBtn">Se connecter / S'inscrire</button>
+          <p class="gate-title">Connectez-vous pour concourir !</p>
+          <p class="gate-hint">
+            Pas de vraie adresse ? Utilisez une adresse <strong>factice</strong> (ex&nbsp;: <code>pseudo@movember.fr</code>).<br>
+            Mot de passe&nbsp;: <strong>4 caractères minimum</strong> — c'est tout ce qu'il faut&nbsp;!
+          </p>
+          <button class="btn btn-primary" id="gateLoginBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Se connecter / S'inscrire
+          </button>
         `;
         form.parentNode.insertBefore(gateEl, form);
       }

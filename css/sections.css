@@ -311,49 +311,93 @@
   color: var(--color-text-muted);
 }
 
-/* Flyer Placeholder Box */
+/* ── Carte blason ───────────────────────────────────────────────────────────
+   Cadre premium : fond sombre profond, liseré dégradé, lueur cyan subtile.
+   ────────────────────────────────────────────────────────────────────────── */
 .flyer-preview-card {
   position: relative;
-  background: linear-gradient(145deg, #18222e 0%, #101620 100%);
-  border: 1px solid rgba(0, 188, 212, 0.25);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-lg), var(--shadow-glow-cyan);
-  transition: transform var(--transition-normal);
+  /* fond en deux couches : lueur centrale + dégradé de surface */
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0, 188, 212, 0.07) 0%, transparent 70%),
+    linear-gradient(160deg, #1a2535 0%, #0d1520 100%);
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  /* liseré dégradé cyan → teal */
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow:
+    0 0 0 1.5px rgba(0, 188, 212, 0.35),   /* liseré lumineux */
+    0 20px 48px rgba(0, 0, 0, 0.55),        /* ombre portée profonde */
+    0 0 32px rgba(0, 188, 212, 0.12);       /* halo ambiant */
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease;
   text-align: center;
+  margin-inline: auto;
+  width: 100%;
+}
+
+/* Trait décoratif en haut — dégradé cyan → teal, 3 px */
+.flyer-preview-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00bcd4 0%, #0d9488 100%);
+  border-radius: 20px 20px 0 0;
+  z-index: 2;
 }
 
 .flyer-preview-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow:
+    0 0 0 1.5px rgba(0, 188, 212, 0.55),
+    0 28px 60px rgba(0, 0, 0, 0.6),
+    0 0 48px rgba(0, 188, 212, 0.2);
 }
 
+/* ── Zone image ─────────────────────────────────────────────────────────── */
 .flyer-visual {
-  aspect-ratio: 3/4;
-  background: radial-gradient(circle at 50% 40%, #1e2c3c 0%, #121922 100%);
-  border-radius: var(--radius-md);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: transparent;
+  border-radius: 0;
+  border: none;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.5rem;
   position: relative;
   overflow: hidden;
+  padding: 1.5rem 1.5rem 0.75rem;
 }
 
-.flyer-ribbon {
-  position: absolute;
-  top: 18px;
-  right: -32px;
-  transform: rotate(45deg);
-  background: var(--color-gold-gradient);
-  color: #0b0f14;
-  font-weight: 800;
-  font-size: 0.7rem;
-  padding: 0.25rem 2.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  box-shadow: var(--shadow-sm);
+.flyer-visual.blason-visual {
+  aspect-ratio: unset;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+/* Blason : ombre portée pour le faire « flotter » sur le fond */
+.blason-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+/* ── Animation d'entrée — une seule fois ───────────────────────────────── */
+@keyframes blasonEntrance {
+  0%   { opacity: 0; transform: translateY(28px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.blason-img {
+  animation: blasonEntrance 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blason-img { animation: none; }
 }
 
 .flyer-placeholder-icon {
@@ -378,10 +422,15 @@
   margin-bottom: 1.25rem;
 }
 
+/* ── Légende ────────────────────────────────────────────────────────────── */
 .flyer-caption {
-  margin-top: 1rem;
-  font-size: 0.825rem;
-  color: var(--color-text-dimmed);
+  padding: 0.65rem 1.25rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin-top: 0.25rem;
 }
 
 /* ==========================================================================
@@ -390,12 +439,18 @@
 .programme-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: 1.25rem;        /* plus serré sur mobile */
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .programme-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .programme-grid {
     gap: 1.75rem;
   }
 }
@@ -411,8 +466,10 @@
   transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
   position: relative;
   overflow: hidden;
+  isolation: isolate; /* crée un contexte d'empilement pour les pseudo-éléments */
 }
 
+/* ── Trait de couleur en haut — toujours visible ─────────────────────── */
 .stand-card::before {
   content: "";
   position: absolute;
@@ -421,28 +478,130 @@
   width: 100%;
   height: 4px;
   background: var(--color-accent-gradient);
-  opacity: 0;
+  opacity: 1;          /* toujours visible — pas besoin du hover sur mobile */
   transition: opacity var(--transition-normal);
+  z-index: 1;
 }
 
-.stand-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(0, 188, 212, 0.4);
-  box-shadow: var(--shadow-md), var(--shadow-glow-cyan);
+/* ── Illustration décorative en arrière-plan ─────────────────────────── */
+.stand-card::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 160px;
+  height: 160px;
+  opacity: 0.12;       /* lisible sans hover */
+  pointer-events: none;
+  z-index: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: bottom right;
+  transition: opacity 0.4s ease, transform 0.6s ease;
 }
 
-.stand-card:hover::before {
-  opacity: 1;
+/* Contenu au-dessus de l'illustration */
+.stand-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hover desktop : surbrillance supplémentaire */
+@media (hover: hover) {
+  .stand-card:hover::after {
+    opacity: 0.2;
+    transform: scale(1.06) rotate(-3deg);
+  }
+
+  .stand-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 188, 212, 0.4);
+    box-shadow: var(--shadow-md), var(--shadow-glow-cyan);
+  }
+
+  .stand-card.highlight-card:hover {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: var(--shadow-md), var(--shadow-glow-orange);
+  }
+}
+
+/* Feedback tactile sur mobile (active) */
+.stand-card:active {
+  transform: scale(0.985);
+  transition: transform 0.12s ease;
 }
 
 .stand-card.highlight-card::before {
   background: var(--color-gold-gradient);
-  opacity: 1;
 }
 
-.stand-card.highlight-card:hover {
-  border-color: rgba(245, 158, 11, 0.5);
-  box-shadow: var(--shadow-md), var(--shadow-glow-orange);
+/* ══════════════════════════════════════════════════════════════════════
+   ILLUSTRATIONS PAR STAND — SVG encodé en data-uri
+   Couleurs vives, opacité gérée par ::after opacity
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Stand 1 — Santé Mentale : tête humaine + onde cérébrale (cyan vif) */
+.stand-card--mental::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='72' r='52' fill='none' stroke='%2300e5ff' stroke-width='5'/%3E%3Cellipse cx='100' cy='130' rx='36' ry='18' fill='none' stroke='%2300e5ff' stroke-width='4'/%3E%3Crect x='88' y='148' width='24' height='18' rx='4' fill='none' stroke='%2300e5ff' stroke-width='3.5'/%3E%3Cpath d='M60 72 Q72 52 84 72 Q96 92 108 72 Q120 52 132 72 Q144 92 156 72' fill='none' stroke='%2300e5ff' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  width: 180px;
+  height: 180px;
+  animation: standIlluPulse 4s ease-in-out infinite;
+}
+
+/* Stand 2 — Prévention Cancer : cœur + croix médicale (orange vif) */
+.stand-card--cancer::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 168 L30 100 Q10 78 30 58 Q50 38 72 52 Q86 60 100 76 Q114 60 130 52 Q152 38 172 58 Q192 78 170 100 Z' fill='none' stroke='%23ff6d00' stroke-width='5' stroke-linejoin='round'/%3E%3Crect x='91' y='84' width='18' height='52' rx='4' fill='%23ff6d00' opacity='0.6'/%3E%3Crect x='74' y='101' width='52' height='18' rx='4' fill='%23ff6d00' opacity='0.6'/%3E%3C/svg%3E");
+  width: 190px;
+  height: 190px;
+  animation: standIlluPulse 3.6s ease-in-out infinite 0.4s;
+}
+
+/* Stand 3 — Maquillage : moustache stylisée (magenta vif) */
+.stand-card--maquillage::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M20 100 Q40 60 70 80 Q85 90 100 80 Q115 70 130 80 Q160 60 180 100 Q160 120 140 108 Q120 96 100 108 Q80 120 60 108 Q40 120 20 100 Z' fill='none' stroke='%23e040fb' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='100' cy='60' r='10' fill='none' stroke='%23e040fb' stroke-width='3.5'/%3E%3Cpath d='M82 140 Q100 150 118 140' fill='none' stroke='%23e040fb' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  width: 200px;
+  height: 200px;
+  animation: standIlluSpin 8s linear infinite;
+}
+
+/* Stand 4 — Gym / Marche : silhouette qui saute (bras levés, jambes écartées) + ondes sol (vert vif) */
+.stand-card--gym::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='30' r='16' fill='none' stroke='%2376ff03' stroke-width='5'/%3E%3Cline x1='100' y1='46' x2='100' y2='102' stroke='%2376ff03' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M100 66 L66 44' stroke='%2376ff03' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M100 66 L134 44' stroke='%2376ff03' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M100 102 L72 148' stroke='%2376ff03' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M100 102 L128 148' stroke='%2376ff03' stroke-width='5' stroke-linecap='round'/%3E%3Cellipse cx='100' cy='168' rx='44' ry='8' fill='none' stroke='%2376ff03' stroke-width='3' opacity='0.5'/%3E%3Cellipse cx='100' cy='176' rx='28' ry='5' fill='none' stroke='%2376ff03' stroke-width='2' opacity='0.3'/%3E%3C/svg%3E");
+  width: 180px;
+  height: 180px;
+  animation: standIlluBounce 2.8s ease-in-out infinite;
+}
+
+/* ── Animations des illustrations ────────────────────────────────────── */
+
+/* Respiration lente */
+@keyframes standIlluPulse {
+  0%, 100% { transform: scale(1)    rotate(0deg); }
+  50%       { transform: scale(1.05) rotate(2deg); }
+}
+
+/* Légère rotation continue */
+@keyframes standIlluSpin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* Rebond vertical */
+@keyframes standIlluBounce {
+  0%, 100% { transform: translateY(0);   }
+  45%      { transform: translateY(-8px); }
+}
+
+/* Sur mobile, ralentir les animations pour économiser la batterie */
+@media (max-width: 768px) {
+  .stand-card--mental::after    { animation-duration: 6s; }
+  .stand-card--cancer::after    { animation-duration: 5.5s; }
+  .stand-card--maquillage::after { animation-duration: 12s; }
+  .stand-card--gym::after       { animation-duration: 4s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stand-card::after { animation: none !important; }
 }
 
 .stand-header {
@@ -1607,4 +1766,179 @@ body {
     font-size: 0.62rem;
     padding: 0.2rem 0.5rem;
   }
+}
+
+/* ==========================================================================
+   11. CLÔTURE VIN CHAUD — bannière finale programme
+   ========================================================================== */
+
+/* Vapeur SVG animée */
+@keyframes steamRise {
+  0%   { opacity: 0;   transform: translateY(0)   scaleX(1); }
+  40%  { opacity: 0.9; transform: translateY(-8px) scaleX(1.1); }
+  100% { opacity: 0;   transform: translateY(-18px) scaleX(0.8); }
+}
+
+.vapeur {
+  transform-origin: center bottom;
+  animation: steamRise 2.4s ease-in-out infinite;
+}
+.vapeur.v2 { animation-delay: 0.8s; }
+.vapeur.v3 { animation-delay: 1.6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vapeur { animation: none; opacity: 0.6; }
+}
+
+/* Bannière */
+.vin-chaud-banner {
+  margin-top: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  background:
+    radial-gradient(ellipse 70% 80% at 10% 50%, rgba(245, 158, 11, 0.1) 0%, transparent 60%),
+    linear-gradient(135deg, #1a1208 0%, #120d18 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: 20px;
+  padding: 2.25rem 2.5rem;
+  box-shadow:
+    0 0 0 1.5px rgba(245, 158, 11, 0.2),
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    0 0 32px rgba(245, 158, 11, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Trait décoratif supérieur — dégradé orange */
+.vin-chaud-banner::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 20px 20px 0 0;
+}
+
+/* Illustration tasse */
+.vin-chaud-illu {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vin-chaud-svg {
+  width: 110px;
+  height: 110px;
+  filter: drop-shadow(0 4px 16px rgba(245, 158, 11, 0.35));
+}
+
+/* Contenu texte */
+.vin-chaud-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.vin-chaud-time {
+  display: inline-block;
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.35rem;
+  line-height: 1;
+}
+
+.vin-chaud-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  margin-bottom: 0.65rem;
+}
+
+.vin-chaud-desc {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin-bottom: 1.1rem;
+  max-width: 580px;
+}
+
+.vin-chaud-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* ── Responsive mobile — stand cards ────────────────────────────────── */
+@media (max-width: 639px) {
+  .stand-card {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-md);
+  }
+
+  /* Illustration plus petite pour ne pas déborder */
+  .stand-card::after {
+    width: 110px;
+    height: 110px;
+    opacity: 0.15;    /* légèrement plus visible car zone réduite */
+  }
+
+  .stand-title {
+    font-size: 1.05rem;
+  }
+
+  .stand-description {
+    font-size: 0.875rem;
+  }
+
+  .stand-features li {
+    font-size: 0.825rem;
+  }
+
+  .stand-footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+  }
+
+  /* Vin chaud : empiler illustration + texte */
+  .vin-chaud-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem 1.25rem;
+    margin-top: 2rem;
+  }
+
+  .vin-chaud-illu {
+    align-self: center;
+  }
+
+  .vin-chaud-svg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .vin-chaud-time {
+    font-size: 1.75rem;
+  }
+
+  .vin-chaud-title {
+    font-size: 1.15rem;
+  }
+
+  .vin-chaud-desc {
+    font-size: 0.875rem;
+  }
+}
+
+/* Vapeur : ralentir sur mobile pour économiser batterie */
+@media (max-width: 768px) {
+  .vapeur { animation-duration: 3.5s; }
 }

@@ -227,7 +227,7 @@
         <path d="M12 14.5c-.8 0-1.5-.2-2.2-.6-1.5-.9-2.7-2.3-4.3-2.9-1.3-.5-2.8-.4-4 .4-.3.2-.5.5-.5.9 0 .8.6 1.5 1.4 1.7 1.8.4 3.7 1.4 5.2 2.6 1.4 1.1 2.8 2.2 4.4 2.2s3-.1 4.4-2.2c1.5-1.2 3.4-2.2 5.2-2.6.8-.2 1.4-.9 1.4-1.7 0-.4-.2-.7-.5-.9-1.2-.8-2.7-.9-4-.4-1.6.6-2.8 2-4.3 2.9-.7.4-1.4.6-2.2.6z"/>
       </svg>
       <p class="login-brand-name">Saint Loup <span>Movember</span></p>
-      <p class="login-brand-tagline">Connectez-vous pour accéder à l'événement solidaire</p>
+      <p class="login-brand-tagline">Connectez-vous pour poster ou voter — le reste du site est libre d'accès !</p>
     </div>
 
     <!-- Carte Login -->
@@ -262,12 +262,15 @@
           <input class="login-form-input" type="text" id="signupPseudoInput" placeholder="Ex: MoustacheMan" autocomplete="nickname" required>
         </div>
         <div>
-          <label class="login-form-label" for="signupEmailInput">Adresse email</label>
-          <input class="login-form-input" type="email" id="signupEmailInput" placeholder="vous@email.com" autocomplete="email" required>
+          <label class="login-form-label" for="signupEmailInput">
+            Adresse email
+            <span style="font-weight:400; color: var(--color-text-dimmed); font-size:0.75rem;"> — une adresse factice fonctionne (ex&nbsp;: pseudo@movember.fr)</span>
+          </label>
+          <input class="login-form-input" type="email" id="signupEmailInput" placeholder="pseudo@movember.fr" autocomplete="email" required>
         </div>
         <div>
-          <label class="login-form-label" for="signupPasswordInput">Mot de passe (min. 6 caractères)</label>
-          <input class="login-form-input" type="password" id="signupPasswordInput" placeholder="••••••••" autocomplete="new-password" required>
+          <label class="login-form-label" for="signupPasswordInput">Mot de passe (min. 4 caractères)</label>
+          <input class="login-form-input" type="password" id="signupPasswordInput" placeholder="••••" autocomplete="new-password" required minlength="4">
         </div>
         <div class="login-error" id="signupError" role="alert"></div>
         <button type="submit" class="login-submit-btn" id="signupSubmit">
