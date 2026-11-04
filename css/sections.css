@@ -455,6 +455,11 @@
   }
 }
 
+/* Carte pleine largeur (occupe toute la ligne de la grille) */
+.stand-card--wide {
+  grid-column: 1 / -1;
+}
+
 .stand-card {
   background: var(--color-bg-card);
   border: var(--border-subtle);
