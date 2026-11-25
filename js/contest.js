@@ -8,6 +8,10 @@
 const STORAGE_KEY_CONTEST = 'movember_contest_entries_v1';
 const STORAGE_KEY_VOTES = 'movember_user_voted_entries_v1';
 
+// Cache galerie : évite de re-requêter Supabase à chaque vote (60 connexions max Free)
+let _entriesCache = null;
+let _entriesCacheAt = 0;
+const _ENTRIES_CACHE_TTL = 30_000; // 30 secondes
 
 let supabaseClient = null;
 let isSupabaseActive = false;
@@ -67,7 +71,12 @@ function initSupabaseClient() {
  * soit publique (voir SUPABASE_SETUP.md), sinon chaque utilisateur ne compte
  * que ses propres votes.
  */
-async function fetchEntries() {
+async function fetchEntries({ bypassCache = false } = {}) {
+  // Sert le cache si encore frais (sauf si on force le bypass après un upload)
+  if (!bypassCache && _entriesCache && (Date.now() - _entriesCacheAt < _ENTRIES_CACHE_TTL)) {
+    return _entriesCache;
+  }
+
   if (isSupabaseActive && supabaseClient) {
     try {
       const { data: entries, error: entriesErr } = await supabaseClient
@@ -81,13 +90,16 @@ async function fetchEntries() {
         return [];
       }
 
-      return (entries || []).map(item => ({
+      const result = (entries || []).map(item => ({
         id: item.id,
         pseudo: item.pseudo || 'Anonyme',
         photoUrl: item.photo_url,
         votes: (item.votes && item.votes[0] && item.votes[0].count) || 0,
         date: item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : 'Aujourd\'hui'
       }));
+      _entriesCache = result;
+      _entriesCacheAt = Date.now();
+      return result;
 
     } catch (err) {
       console.error('❌ Exception Supabase fetchEntries:', err);
@@ -203,12 +215,12 @@ function _pulseHeart(el) {
 /**
  * Affichage / Rendu dynamique de la galerie
  */
-async function loadAndRenderGallery() {
+async function loadAndRenderGallery({ bypassCache = false } = {}) {
   const gallery = document.getElementById('contestGallery');
   const countBadge = document.getElementById('contestCountBadge');
   if (!gallery) return;
 
-  const entries = await fetchEntries();
+  const entries = await fetchEntries({ bypassCache });
   const userVotes = await getUserVotes();
 
   if (countBadge) {
@@ -463,9 +475,11 @@ window.handleVote = async function(entryId) {
     console.error('❌ Exception handleVote:', err);
     if (window.showToast) window.showToast('Erreur inattendue lors du vote.', 'warning');
   } finally {
-    // Toujours libérer le verrou et re-rendre la galerie (bouton dans le bon état)
+    // Invalider le cache (pour prochain re-fetch), mais ne pas re-rendre (DOM déjà maj)
+    _entriesCache = null;
     _votingInProgress.delete(entryId);
-    await loadAndRenderGallery();
+    // Réactiver le bouton
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
   }
 };
 
@@ -499,7 +513,7 @@ function initUploadForm() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      compressImage(e.target.result, 800, 800, 0.85, (compressedUrl, blob) => {
+      compressImage(e.target.result, 1200, 1200, 0.75, (compressedUrl, blob) => {
         currentImageDataUrl = compressedUrl;
         currentFileBlob = blob;
         if (previewImg && previewContainer && dropZone) {
@@ -704,7 +718,7 @@ function initUploadForm() {
     resetSubmitButton();
 
     // Rechargement immédiat des données depuis Supabase pour mettre à jour la galerie
-    await loadAndRenderGallery();
+    await loadAndRenderGallery({ bypassCache: true }); // Force le fetch après un upload
 
     if (window.showToast) {
       window.showToast(`🎉 Félicitations ${pseudo} ! Votre moustache a été publiée avec succès.`, 'success');
